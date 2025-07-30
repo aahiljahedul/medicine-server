@@ -250,7 +250,6 @@ app.post('/add-medicine',async (req,res) => {
 
 
 //
-   // Node.js + Express
 app.get('/medicines/discounted', async (req, res) => {
   const result = await medicineCollection.find({
     discount: { $gte: 6, $lte: 10 }
