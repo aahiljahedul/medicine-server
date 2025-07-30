@@ -31,8 +31,8 @@ async function run() {
   try {
 
 
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // // Connect the client to the server	(optional starting in v4.7)
+    // await client.connect();
 
    const database =client.db('medicinebd')
    const categoriesCollections=database.collection('category')
@@ -45,19 +45,26 @@ async function run() {
 
     ///users
 
-   
-  app.post('/users',async (req,res)=>{
-    const email =req.body.email;
-    const userExists =await userCollection.findOne({email})
-    if (userExists) {
-      return res.status(200).send({message:'User already exists',
-        inserted:false
-      });
-    }
-    const user =req.body;
-    const result = await userCollection.insertOne(user)
-    res.send(result);
-  })
+ 
+
+  app.post('/users', async (req, res) => {
+  const email = req.body.email;
+  const user = req.body;
+
+  const result = await userCollection.updateOne(
+    { email },
+    { $setOnInsert: user },
+    { upsert: true }
+  );
+
+  res.send({
+    message: result.upsertedCount > 0
+      ? 'User inserted'
+      : 'User already exists',
+    inserted: result.upsertedCount > 0,
+  });
+});
+
 
   app.get('/users', async (req, res) => {
   try {
@@ -118,7 +125,7 @@ app.put('/profile/:email', async (req, res) => {
       const email = req.params.email
       const result = await userCollection.findOne({email})
       if (!result) {
-        return res.status(404).send({massage:'User not found'})
+        return res.status(404).send({message:'User not found'})
       }
       res.send({role:result?.role})
     })
@@ -127,6 +134,7 @@ app.put('/profile/:email', async (req, res) => {
 app.patch('/users/role/:email', async (req, res) => {
   try {
     const { role } = req.body;
+     console.log("GET /user/role called with email:", req.params.email)
     const result = await userCollection.updateOne(
       { email: req.params.email },
       { $set: { role } }
@@ -696,9 +704,9 @@ app.patch('/admin/advertisements/:id/toggle-banner', async (req, res) => {
 
 
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // // Send a ping to confirm a successful connection
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
